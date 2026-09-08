@@ -1,0 +1,118 @@
+{
+  "version": "1.0",
+  "title": "Validated Request Pipeline",
+  "subject": "software-architecture",
+  "orientation": "left-to-right",
+  "scale": {
+    "lane_count": "one visible lane per payload instance in this example"
+  },
+  "legend": [
+    {
+      "channel": "cyan line",
+      "meaning": "validated request payload"
+    }
+  ],
+  "components": [
+    {
+      "id": "validator",
+      "index": "01",
+      "title": "Request Validator",
+      "role": "Checks an incoming request and produces a validated request",
+      "category": "transform",
+      "ports": [
+        {
+          "id": "request_in",
+          "direction": "input",
+          "payload": "RawRequest",
+          "shape": "RawRequest"
+        },
+        {
+          "id": "request_out",
+          "direction": "output",
+          "payload": "ValidatedRequest",
+          "shape": "ValidatedRequest"
+        }
+      ],
+      "operation": {
+        "kind": "validate",
+        "preserves": ["request identity"],
+        "changes": ["validation state and normalized fields"]
+      },
+      "visual": {
+        "metaphor": "inspection gate",
+        "geometry": "one inlet, illuminated validation chamber, one outlet",
+        "encoding": "amber before validation and cyan after validation"
+      },
+      "inspect": {
+        "intuition": "The gate checks and normalizes one request without creating extra requests.",
+        "details": "Invalid requests leave through an explicitly separate error edge when that behavior is modeled.",
+        "symbols": []
+      }
+    },
+    {
+      "id": "worker",
+      "index": "02",
+      "title": "Worker",
+      "role": "Executes the validated request",
+      "category": "sink",
+      "ports": [
+        {
+          "id": "request_in",
+          "direction": "input",
+          "payload": "ValidatedRequest",
+          "shape": "ValidatedRequest"
+        }
+      ],
+      "operation": {
+        "kind": "execute",
+        "preserves": ["request identity"],
+        "changes": ["task state"]
+      },
+      "visual": {
+        "metaphor": "execution chamber",
+        "geometry": "bounded machine with one request inlet",
+        "encoding": "cyan pulse means the worker accepted the request"
+      },
+      "inspect": {
+        "intuition": "The worker consumes a request that has already passed validation.",
+        "details": "The worker does not perform validation again in this model.",
+        "symbols": []
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "validated_request",
+      "source": {
+        "component": "validator",
+        "port": "request_out"
+      },
+      "target": {
+        "component": "worker",
+        "port": "request_in"
+      },
+      "kind": "data",
+      "payload": "ValidatedRequest",
+      "shape": "ValidatedRequest"
+    }
+  ],
+  "modes": [
+    {
+      "id": "normal",
+      "active_components": [
+        "validator",
+        "worker"
+      ],
+      "active_edges": [
+        "validated_request"
+      ]
+    }
+  ],
+  "flow_animations": [
+    {
+      "edge": "validated_request",
+      "direction": "validator to worker",
+      "meaning": "a validated request is handed to the worker"
+    }
+  ]
+}
