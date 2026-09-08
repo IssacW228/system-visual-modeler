@@ -1,0 +1,4 @@
+interface:
+  display_name: "系统可视化建模"
+  short_description: "将代码、系统、Agent 与公式转化为严谨的交互式可视化模型"
+  default_prompt: "Use $system-visual-modeler to decompose this mechanism and build an accurate, inspectable interactive visual model."
