@@ -2,6 +2,8 @@
 
 Apply this reference when the deliverable is an interactive webpage or rendered scene.
 
+For React output, use `assets/web-model-kit/` and [web-component-kit.md](web-component-kit.md) unless the host project already provides an equivalent non-overlapping workbench. The kit is the baseline contract for shell layout and surface behavior; domain-specific rendering remains independent.
+
 ## Architecture
 
 Keep these concerns separate:
@@ -22,6 +24,7 @@ In React projects, keep the model data framework-agnostic. Use React Three Fiber
 - Frame the complete topology on reset.
 - Focus on a component's semantic center, not merely its mesh origin.
 - Reserve screen space for the detail panel by offsetting the camera projection or target; do not cover the focused object.
+- Keep drag/pan, wheel or pinch zoom, explicit zoom controls, keyboard movement, and reset available while a detail panel is open.
 - Keep local upstream and downstream ports visible when they explain the component.
 - Hide unrelated annotations during focus.
 - If the architecture is longer than one viewport, provide a continuous pan/scrubber that navigates without opening component details.
@@ -30,6 +33,7 @@ In React projects, keep the model data framework-agnostic. Use React Three Fiber
 ## Labels and overlays
 
 - Use HTML overlays for readable teaching copy and accessible controls.
+- Use an anchored popover for short contextual help and a modal for deliberate long-form guidance; both need visible close actions and Escape dismissal.
 - Use a consistent type scale.
 - Place concise labels near the geometry and long explanations in a panel.
 - Scope labels to the current component during focus.

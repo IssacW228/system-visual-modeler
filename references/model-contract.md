@@ -27,6 +27,8 @@ Each component needs:
 - `inspect` containing intuition, detailed explanation, shapes or types, and symbol definitions;
 - mode overrides only where behavior actually changes.
 
+For `normal` and `deep`, add `source_refs`: compact paths, page/section anchors, symbol locations, or other stable evidence pointers grounding the component. These references feed project memory and follow-up retrieval; do not copy long source passages into the manifest.
+
 Formulae are optional for systems without meaningful mathematics. Use pseudocode, an interface contract, or a source excerpt instead.
 
 ### Ports

@@ -1,61 +1,53 @@
 # System Visual Modeler / 系统可视化建模
 
+Turn folders, documents, codebases, workflows, architectures, algorithms, and mathematical pipelines into grounded 2D, 2.5D, or 3D interactive models—without reading the whole project into context.
+
+把文件夹、文档、代码库、工作流、架构、算法和数学流水线，快速转化为有证据依据的 2D、2.5D 或 3D 交互模型，同时控制扫描时间和上下文 Token。
+
 [中文](#中文) · [English](#english)
-
-`system-visual-modeler` is a reusable Codex skill for turning code execution, software architecture, agent workflows, algorithms, and mathematical or tensor pipelines into accurate, inspectable interactive visual models.
-
-`system-visual-modeler` 是一个可复用的 Codex Skill，用于把代码执行、软件架构、Agent 工作流、算法以及数学/张量流水线，转化为结构准确、可检查、可交互的可视化模型。
 
 ---
 
 ## 中文
 
-### 它解决什么问题
+### 为什么做这个 Skill
 
-复杂系统常被画成“看起来很酷”的图，但节点、连线、维度、执行顺序和文字说明并不完全一致。这个 Skill 把可视化视为一个**可执行的解释模型**：先建立系统契约，再设计空间隐喻，最后检查画面、动画、公式与真实机制是否一一对应。
+大多数可视化工具要么只生成静态流程图，要么为了画面效果牺牲结构准确性。`system-visual-modeler` 把可视化当作一个可检查的解释模型：先扫描证据，再建立组件、端口和关系契约，最后选择真正有意义的维度和交互方式。
 
-它适合：
+它的差异化重点是：
 
-- 代码执行过程：调用栈、数据结构、编译流水线、事件循环；
-- 软件架构：服务、队列、缓存、数据库、控制流与数据流；
-- Agent 架构：规划、工具调用、记忆、路由、并行与回退；
-- 算法：搜索、排序、图算法、动态规划、训练与推理流程；
-- 数学与张量系统：矩阵运算、维度变化、广播、分支、合并与归一化；
-- WebGL / Three.js / React Three Fiber 教学模型。
+- **轻量且快速**：Lite 会扫描完整目录结构，但只抽取经过权威度、结构差异和问题相关性排序的少量内容；没有固定文件数量上限。
+- **按需加深**：提供 Lite、Normal、Deep 三种重量，不必为了快速了解项目而生成完整网页。
+- **结构忠实**：每条可见边都应有来源，或明确标记为假设；区分数据、控制、调用、状态、残差和反馈流。
+- **维度有语义**：2D、2.5D、3D 由结构需求决定，不把 3D 当作质量标签。
+- **可继续提问**：Normal 和 Deep 可生成轻量、MAGMA-inspired 的增量项目记忆。
+- **可复用网页交互**：内置 React UI Kit，支持拖拽平移、指针缩放、键盘移动、详情侧栏、Popover、Modal 和移动端底部面板。
 
-它不适合仅追求装饰效果的 3D 场景、普通数据看板，或无需结构精度的概念插图。
+### 三种模式
 
-### 核心原则
+| 模式 | 适合场景 | 默认产物 |
+|---|---|---|
+| `lite` | 快速了解任意规模项目、文档或文件夹 | 自适应证据索引 + 主要结构的紧凑 2D 总览 |
+| `normal` | 交互解释、教学、后续问答 | 类型化模型清单 + 2D/2.5D 模型 + 追踪 + 项目记忆 |
+| `deep` | 交付级精度、多模式、复杂状态或明确的 3D 需求 | 完整模型清单 + 有理由的 2D/2.5D/3D + 全面审计 + 项目记忆 |
 
-1. **语义先于造型**：先确定节点、端口、数据类型、维度和执行顺序，再决定几何体。
-2. **连线必须有类型**：数据流、控制流、残差旁路、参数投影、缓存读写不能共用一种含糊的线。
-3. **尺寸必须可解释**：宽度、通道数、阵列数量或截面积应与真实维度建立明确比例；必要时使用经过声明的压缩比例。
-4. **动画必须服从计算**：粒子不能只是装饰；分叉、并行、汇聚、缓存、逐步执行都应反映真实数据运动。
-5. **局部与全局一致**：组件详情页、悬浮标签、公式、张量形状和总览模型必须使用同一份配置。
-6. **可验证而非凭感觉**：通过模型清单和审计检查表，发现缺失节点、错误连接、维度不守恒及说明不一致。
+未指定时，Skill 会选择能够回答问题的最轻模式。
 
-### 工作流
+### 工作流程
 
 ```text
-需求或源码
-   ↓
-系统契约：节点 / 端口 / 类型 / 形状 / 不变量
-   ↓
-视觉语法：几何 / 颜色 / 尺度 / 连接 / 动画
-   ↓
-交互模型：总览 / 聚焦 / 模式 / 时间轴 / 详情
-   ↓
-语义审计 + 可读性审计 + 性能审计
+文件夹 / 文档 / 代码 / 流程
+          ↓
+完整结构扫描 + 自适应内容取样
+          ↓
+证据索引：文档、入口、符号、依赖、未知项
+          ↓
+模型清单：组件、端口、类型、形状、边、模式
+          ↓
+2D / 2.5D / 3D 表达 + 交互与审计
+          ↓
+可选增量记忆 → 快速、精准的后续问答
 ```
-
-Skill 中包含：
-
-- `references/model-contract.md`：如何从机制提取可视化系统契约；
-- `references/domain-grammars.md`：代码、架构、Agent、算法和张量系统的领域语法；
-- `references/interaction-and-rendering.md`：镜头、标签、粒子、模式和渲染策略；
-- `references/audit-checklist.md`：语义、视觉、交互、性能和无障碍检查表；
-- `references/example-manifest.json`：可机读的示例模型；
-- `scripts/validate_model.py`：模型清单验证器。
 
 ### 安装
 
@@ -64,145 +56,190 @@ git clone https://github.com/IssacW228/system-visual-modeler.git
 cp -R system-visual-modeler ~/.codex/skills/system-visual-modeler
 ```
 
-重新打开 Codex 会话后，即可在提示词中调用 `$system-visual-modeler`。
-
-### 使用示例
+重新打开 Codex 会话，然后使用：
 
 ```text
-使用 $system-visual-modeler，把 Decoder-Only Transformer 拆成可交互的 3D 模型。
-要求严格表达 Q/K/V 来源、因果注意力、残差旁路、SwiGLU 两分支、张量维度变化，
-并提供总览、点击聚焦、训练/推理模式与逐步数据流动画。
+使用 $system-visual-modeler，以 Lite 模式快速解释这个文件夹的主要结构。
 ```
+
+也可以不指定模式：
 
 ```text
-使用 $system-visual-modeler，把这个多 Agent 客服系统做成可视化网页。
-区分控制流、消息流、工具调用和共享记忆，展示并发、超时、重试与人工接管。
+使用 $system-visual-modeler，把这个多 Agent 系统做成可交互模型，区分控制流、消息流、工具调用和共享记忆。
 ```
 
-```text
-使用 $system-visual-modeler，可视化这段编译器代码从 AST 到 IR 再到机器码的过程。
-每个阶段应能单独查看输入、输出、不变量和错误来源。
+### 自适应证据扫描
+
+```bash
+python3 scripts/scan_evidence.py /path/to/project \
+  --mode lite \
+  --question "这个项目的主要结构是什么？" \
+  --output .visual-model/evidence-index.json
 ```
 
-### 验证模型清单
+扫描器会遍历完整元数据结构，排除生成目录、依赖、缓存和二进制内容，再按项目级文档、入口文件、结构差异和问题相关性选择内容样本。内容取样数量随规模对数增长，而不是到达固定数量就停止。
+
+### 模型清单验证
 
 ```bash
 python3 scripts/validate_model.py references/example-manifest.json
 ```
 
-你也可以复制 `example-manifest.json`，把自己的节点、端口、边、张量形状和模式写入同一套结构，再运行验证器检查基础一致性。
+清单是网页、标签、详情、追踪和模式的统一事实来源。验证器会检查组件、端口、边和引用的一致性。
 
-### 推荐的交付结构
+### 增量项目记忆
 
-```text
-visual-model/
-├── data/               # 唯一事实来源：节点、边、公式、形状、模式
-├── scene/              # 3D 场景与领域组件
-├── interaction/        # 镜头聚焦、选择、时间轴、模式切换
-├── overlays/           # 标签、图例、详情面板与公式
-├── validation/         # 语义与几何检查
-└── tests/              # 配置、交互与视觉回归测试
+Normal 和 Deep 默认可以维护 `.visual-model/memory.json`：
+
+```bash
+python3 scripts/project_memory.py build \
+  --evidence .visual-model/evidence-index.json \
+  --manifest .visual-model/model.json \
+  --output .visual-model/memory.json
+
+python3 scripts/project_memory.py update .visual-model/memory.json \
+  --evidence .visual-model/evidence-index.json \
+  --manifest .visual-model/model.json
+
+python3 scripts/project_memory.py query .visual-model/memory.json \
+  "这个组件为什么依赖缓存？" \
+  --evidence .visual-model/evidence-index.json
 ```
+
+更新时会复用未变化的记忆项，仅重新计算受影响的语义关系，并刷新当前的时间、因果和实体图。无变化更新不会重写文件。查询只返回紧凑证据包，不要求 Agent 把完整记忆读进上下文；无匹配时返回 `needs_source_lookup`，避免用无关节点凑答案。
+
+### 可复用 Web UI Kit
+
+`assets/web-model-kit/` 包含无第三方视口依赖的 React 组件：
+
+- `VisualWorkbench`：页头、工具轨、画布、工具面板、详情检查器和组件导航；
+- `usePanZoomViewport` / `ViewportSurface`：拖拽、触控、指针中心滚轮缩放、按钮缩放、方向键和平移复位；
+- `PopoverCard` / `DialogModal`：短提示和完整帮助弹窗；
+- `useExclusiveSurface`：保证主要解释界面互斥；
+- 响应式布局：桌面端面板让画布缩窄，移动端使用独立底部区域，不覆盖模型。
+
+组件详情打开后，画布依然可以自由拖拽和缩放。节点默认保持拓扑位置不变，避免交互破坏模型含义。
+
+### 本地基准
+
+以下数据来自 2026-09-14 的本地暖缓存测试，仅反映确定性扫描和记忆脚本，不包含 LLM 生成、浏览器构建或 PDF/Word 等专用解析时间。
+
+| 场景 | 结果 |
+|---|---:|
+| 85 文件 Lite / Normal / Deep 扫描 | 约 30 / 30 / 40 ms |
+| 1,000 文件 Lite 扫描 | 约 50 ms，取样 10 个文件 |
+| 10,000 文件 Lite 扫描 | 约 230 ms，取样 14 个文件 |
+| 记忆构建 / 无变化更新 / 单项变化更新 / 查询 | 各约 30 ms |
+| 85 文件 Lite 紧凑概览 | 估算约 514 Token |
+| 10,000 文件 Lite 紧凑概览 | 估算约 607 Token |
+| 单次记忆查询证据包 | 估算约 292 Token |
+
+Token 为字符启发式估算，实际数值取决于模型 tokenizer 和项目语言。完整记忆文件保存在本地，正常查询流程不会把它整体加载进上下文。
+
+### 适用范围
+
+适合代码执行、软件架构、Agent 系统、算法、文档结构、数学与张量流水线，以及需要结构化教学解释的网页模型。
+
+不适合纯装饰 3D、普通数据看板，或不要求机制准确的概念插画。
 
 ---
 
 ## English
 
-### What it solves
+### What makes it different
 
-Complex systems are often visualized as attractive diagrams whose nodes, connections, dimensions, execution order, and explanations do not fully agree. This skill treats a visualization as an **executable explanatory model**: establish the system contract first, design a spatial metaphor second, and then audit the scene, animation, formulas, and prose against the real mechanism.
+`system-visual-modeler` is designed for fast structural understanding first and polished interactive modeling second.
 
-It is useful for:
+- **Adaptive intake:** scans the complete file inventory, then samples a logarithmically growing set of authoritative, structurally diverse, question-relevant sources.
+- **Three weights:** Lite for orientation, Normal for interactive explanation and memory, Deep for delivery-grade fidelity and audit.
+- **Grounded topology:** visible components and edges retain source references; unresolved relationships stay unresolved or are labeled as hypotheses.
+- **Meaningful dimensionality:** 2D, 2.5D, and 3D are chosen by what depth actually encodes.
+- **Incremental memory:** Normal and Deep can maintain a compact semantic, temporal, causal, and entity graph for follow-up questions.
+- **Reusable interaction shell:** the bundled React kit provides non-overlapping panels, drag/pan, pointer-centered zoom, keyboard movement, popovers, modals, and responsive behavior.
 
-- code execution: call stacks, data structures, compiler pipelines, and event loops;
-- software architecture: services, queues, caches, databases, control flow, and data flow;
-- agent systems: planning, tool use, memory, routing, parallelism, and fallback paths;
-- algorithms: search, sorting, graph algorithms, dynamic programming, training, and inference;
-- mathematical and tensor systems: matrix operations, shape changes, broadcasting, branching, merging, and normalization;
-- educational WebGL / Three.js / React Three Fiber experiences.
+### Modes
 
-It is not intended for decorative 3D scenes, ordinary dashboards, or conceptual illustrations where structural fidelity is unimportant.
+| Mode | Best for | Default output |
+|---|---|---|
+| `lite` | Fast orientation at any input scale | Adaptive evidence index + compact 2D overview |
+| `normal` | Interactive explanation and follow-up questions | Typed manifest + 2D/2.5D model + trace + project memory |
+| `deep` | Delivery-grade fidelity, complex state, or justified 3D | Full manifest + justified dimensionality + complete audit + memory |
 
-### Core principles
+When no mode is specified, the skill chooses the lightest mode that can answer the request.
 
-1. **Semantics before geometry**: define nodes, ports, data types, dimensions, and execution order before choosing shapes.
-2. **Every connection is typed**: data flow, control flow, residual bypasses, parameter projections, and cache access must not collapse into one ambiguous line style.
-3. **Scale must be explainable**: width, lane count, array count, or cross-section should map to real dimensions, with any visual compression declared explicitly.
-4. **Animation follows computation**: particles are not decoration; splits, parallel work, merges, caching, and sequential execution must mirror actual data movement.
-5. **Local and global views agree**: component views, floating labels, formulas, tensor shapes, and the overview use the same source of truth.
-6. **Validate instead of guessing**: use a model manifest and audit checklist to catch missing nodes, invalid edges, shape violations, and explanation drift.
-
-### Workflow
-
-```text
-Requirements or source code
-   ↓
-System contract: nodes / ports / types / shapes / invariants
-   ↓
-Visual grammar: geometry / color / scale / connections / motion
-   ↓
-Interactive model: overview / focus / modes / timeline / details
-   ↓
-Semantic audit + readability audit + performance audit
-```
-
-The skill includes:
-
-- `references/model-contract.md`: extracting a visual system contract from a mechanism;
-- `references/domain-grammars.md`: domain grammars for code, architecture, agents, algorithms, and tensor systems;
-- `references/interaction-and-rendering.md`: camera, labeling, particles, modes, and rendering guidance;
-- `references/audit-checklist.md`: semantic, visual, interaction, performance, and accessibility checks;
-- `references/example-manifest.json`: a machine-readable example model;
-- `scripts/validate_model.py`: a model-manifest validator.
-
-### Installation
+### Install
 
 ```bash
 git clone https://github.com/IssacW228/system-visual-modeler.git
 cp -R system-visual-modeler ~/.codex/skills/system-visual-modeler
 ```
 
-Start a new Codex session, then invoke the skill as `$system-visual-modeler` in your prompt.
+Start a new Codex session and invoke `$system-visual-modeler`.
 
-### Usage examples
+### Quick scan
 
-```text
-Use $system-visual-modeler to turn a Decoder-Only Transformer into an interactive 3D model.
-Accurately represent Q/K/V provenance, causal attention, residual bypasses, the two SwiGLU
-branches, and tensor shape changes. Include an overview, click-to-focus inspection,
-training/inference modes, and stepwise data-flow animation.
+```bash
+python3 scripts/scan_evidence.py /path/to/project \
+  --mode lite \
+  --question "What is the main structure?" \
+  --output .visual-model/evidence-index.json
 ```
 
-```text
-Use $system-visual-modeler to visualize this multi-agent support system.
-Distinguish control flow, message flow, tool calls, and shared memory. Show concurrency,
-timeouts, retries, and human handoff.
-```
+The scanner walks the complete metadata inventory while excluding generated, vendored, cached, and binary content. It ranks project-level documentation and likely entry points instead of returning the first files encountered or stopping at a fixed count.
 
-```text
-Use $system-visual-modeler to explain how this compiler moves from AST to IR to machine code.
-Each stage should expose its inputs, outputs, invariants, and possible error sources.
-```
-
-### Validate a model manifest
+### Validate a manifest
 
 ```bash
 python3 scripts/validate_model.py references/example-manifest.json
 ```
 
-You can copy `example-manifest.json`, encode your own nodes, ports, edges, tensor shapes, and operating modes, and run the validator to catch basic consistency errors.
+The manifest is the shared source of truth for components, ports, edges, modes, labels, inspection surfaces, and traces.
 
-### Recommended project layout
+### Build, update, and query memory
 
-```text
-visual-model/
-├── data/               # Single source of truth: nodes, edges, formulas, shapes, modes
-├── scene/              # 3D scene and domain components
-├── interaction/        # Camera focus, selection, timeline, mode switching
-├── overlays/           # Labels, legends, detail panels, formulas
-├── validation/         # Semantic and geometric checks
-└── tests/              # Configuration, interaction, and visual regression tests
+```bash
+python3 scripts/project_memory.py build \
+  --evidence .visual-model/evidence-index.json \
+  --manifest .visual-model/model.json \
+  --output .visual-model/memory.json
+
+python3 scripts/project_memory.py update .visual-model/memory.json \
+  --evidence .visual-model/evidence-index.json \
+  --manifest .visual-model/model.json
+
+python3 scripts/project_memory.py query .visual-model/memory.json \
+  "Why does this component depend on the cache?" \
+  --evidence .visual-model/evidence-index.json
 ```
+
+Unchanged items are reused, semantic edges are recomputed only around changed items, and a no-op update does not rewrite the memory file. Queries return a small evidence bundle rather than loading the whole graph into model context.
+
+### Reusable React kit
+
+Copy or adapt `assets/web-model-kit/` when the host project does not already provide an equivalent shell. It includes:
+
+- a non-overlapping workbench layout;
+- drag, touch, wheel zoom, explicit zoom controls, keyboard pan, and reset;
+- docked inspectors that keep viewport interaction active;
+- contextual popovers and focus-aware modal dialogs;
+- component navigation and exclusive explanatory surfaces;
+- mobile bottom-panel behavior and reduced-motion support.
+
+### Local benchmark
+
+Warm-cache measurements from 2026-09-14:
+
+| Scenario | Result |
+|---|---:|
+| 85-file Lite / Normal / Deep scan | ~30 / 30 / 40 ms |
+| 1,000-file Lite scan | ~50 ms, 10 content samples |
+| 10,000-file Lite scan | ~230 ms, 14 content samples |
+| Memory build / no-op update / one-item update / query | ~30 ms each |
+| Compact Lite overview, 85 files | ~514 estimated tokens |
+| Compact Lite overview, 10,000 files | ~607 estimated tokens |
+| One memory query evidence bundle | ~292 estimated tokens |
+
+Token counts are character-based estimates; actual values depend on the model tokenizer and project language. Rich-document extraction and LLM generation are not included.
 
 ## Repository structure
 
@@ -212,18 +249,34 @@ system-visual-modeler/
 ├── README.md
 ├── agents/
 │   └── openai.yaml
+├── assets/
+│   └── web-model-kit/
 ├── references/
 │   ├── audit-checklist.md
 │   ├── domain-grammars.md
 │   ├── example-manifest.json
 │   ├── interaction-and-rendering.md
-│   └── model-contract.md
-└── scripts/
-    └── validate_model.py
+│   ├── model-contract.md
+│   ├── modes-and-budgets.md
+│   ├── project-memory.md
+│   └── web-component-kit.md
+├── scripts/
+│   ├── project_memory.py
+│   ├── scan_evidence.py
+│   └── validate_model.py
+└── tests/
+    └── test_project_memory.py
 ```
+
+## Validation
+
+```bash
+python3 -m unittest discover -s tests -v
+python3 scripts/validate_model.py references/example-manifest.json
+```
+
+The project-memory tests cover no-op updates, dependency-aware changes, removal, compact retrieval, and unrelated-query rejection.
 
 ## Origin
 
-This skill grew out of an iterative effort to model a Decoder-Only Transformer as a precise 3D factory. That process exposed a general lesson: a useful visualization must preserve structure, dimensionality, provenance, and execution semantics—not merely resemble the subject.
-
-这个 Skill 源于一次对 Decoder-Only Transformer 的精确 3D 工厂建模。反复校正 QKV 来源、注意力对应关系、残差路径、SwiGLU 分支和维度变化后，我们把其中可复用的方法提炼成了这套通用工作流。
+This skill grew from repeated attempts to model complex systems without allowing attractive visuals to drift away from source truth. The result is a workflow that begins with fast evidence selection, preserves topology and provenance, and scales up to richer interaction only when it adds explanatory value.
