@@ -7,6 +7,18 @@ description: "Rapidly turn a folder, document, codebase, workflow, architecture,
 
 Build the smallest visual model that answers how the subject is structured or behaves. Start fast, preserve evidence, and deepen only when requested or necessary.
 
+## Runtime paths and invocation
+
+This skill runs in Claude Code and Codex. Bundled `scripts/`, `references/`, and `assets/` paths are relative to the skill directory, not to the user's project. In Claude Code the skill directory is `${CLAUDE_SKILL_DIR}`; elsewhere it is the directory containing this `SKILL.md`. Run scripts with that prefix and keep the user's project as the working directory, for example:
+
+```bash
+python3 "${CLAUDE_SKILL_DIR}/scripts/scan_evidence.py" . --mode lite --question "<question>" --output .visual-model/evidence-index.json
+```
+
+Scripts need only Python 3.9+ and the standard library. Write outputs under the user's project in `.visual-model/`, never inside the skill directory.
+
+Arguments from a slash invocation (`/system-visual-modeler <target> [lite|normal|deep] [question]`), if any: $ARGUMENTS. Treat a path as the target, a mode word as the explicit weight, and the remaining text as the question. With no arguments, model the current project or the subject named in the conversation.
+
 ## Choose weight before reading deeply
 
 Use an explicit user choice. Otherwise infer the lightest sufficient mode:

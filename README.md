@@ -51,6 +51,33 @@ Turn folders, documents, codebases, workflows, architectures, algorithms, and ma
 
 ### 安装
 
+本仓库同时是 Codex Skill、Claude Code Skill 和 Claude Code 插件（含插件市场清单），任选其一即可。
+
+**Claude Code：插件市场（推荐，可随仓库更新）**
+
+```text
+/plugin marketplace add IssacW228/system-visual-modeler
+/plugin install system-visual-modeler@system-visual-modeler
+```
+
+安装后可以直接描述需求，Claude 会按 Skill 描述自动调用；也可以显式调用：
+
+```text
+/system-visual-modeler:system-visual-modeler ./my-project lite 这个项目的主要结构是什么？
+```
+
+**Claude Code：个人或项目 Skill**
+
+```bash
+git clone https://github.com/IssacW228/system-visual-modeler.git
+cp -R system-visual-modeler ~/.claude/skills/system-visual-modeler      # 所有项目可用
+# 或：cp -R system-visual-modeler .claude/skills/system-visual-modeler   # 仅当前仓库
+```
+
+随后使用 `/system-visual-modeler [路径] [lite|normal|deep] [问题]`。脚本路径通过 `${CLAUDE_SKILL_DIR}` 解析，输出写入当前项目的 `.visual-model/`。
+
+**Codex**
+
 ```bash
 git clone https://github.com/IssacW228/system-visual-modeler.git
 cp -R system-visual-modeler ~/.codex/skills/system-visual-modeler
@@ -169,6 +196,33 @@ When no mode is specified, the skill chooses the lightest mode that can answer t
 
 ### Install
 
+This repository is a Codex skill, a Claude Code skill, and a Claude Code plugin with its own marketplace manifest. Pick one.
+
+**Claude Code: plugin marketplace (recommended, updatable)**
+
+```text
+/plugin marketplace add IssacW228/system-visual-modeler
+/plugin install system-visual-modeler@system-visual-modeler
+```
+
+Claude invokes the skill automatically from its description, or call it explicitly:
+
+```text
+/system-visual-modeler:system-visual-modeler ./my-project lite What is the main structure?
+```
+
+**Claude Code: personal or project skill**
+
+```bash
+git clone https://github.com/IssacW228/system-visual-modeler.git
+cp -R system-visual-modeler ~/.claude/skills/system-visual-modeler      # all projects
+# or: cp -R system-visual-modeler .claude/skills/system-visual-modeler  # this repository only
+```
+
+Then use `/system-visual-modeler [path] [lite|normal|deep] [question]`. Bundled scripts resolve through `${CLAUDE_SKILL_DIR}`; outputs go to `.visual-model/` in the current project.
+
+**Codex**
+
 ```bash
 git clone https://github.com/IssacW228/system-visual-modeler.git
 cp -R system-visual-modeler ~/.codex/skills/system-visual-modeler
@@ -245,6 +299,9 @@ Token counts are character-based estimates; actual values depend on the model to
 
 ```text
 system-visual-modeler/
+├── .claude-plugin/
+│   ├── marketplace.json
+│   └── plugin.json
 ├── SKILL.md
 ├── README.md
 ├── agents/
@@ -273,9 +330,10 @@ system-visual-modeler/
 ```bash
 python3 -m unittest discover -s tests -v
 python3 scripts/validate_model.py references/example-manifest.json
+claude plugin validate .
 ```
 
-The project-memory tests cover no-op updates, dependency-aware changes, removal, compact retrieval, and unrelated-query rejection.
+The packaging tests keep `SKILL.md`, the Claude plugin manifests, and every bundled path referenced by the skill consistent. The project-memory tests cover no-op updates, dependency-aware changes, removal, compact retrieval, and unrelated-query rejection.
 
 ## Origin
 

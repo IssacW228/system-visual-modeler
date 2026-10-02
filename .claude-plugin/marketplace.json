@@ -1,0 +1,17 @@
+{
+  "name": "system-visual-modeler",
+  "description": "Marketplace for the System Visual Modeler skill.",
+  "owner": {
+    "name": "IssacW228",
+    "url": "https://github.com/IssacW228"
+  },
+  "plugins": [
+    {
+      "name": "system-visual-modeler",
+      "source": "./",
+      "description": "Evidence-grounded 2D/2.5D/3D interactive models of folders, documents, codebases, and systems.",
+      "category": "productivity",
+      "tags": ["visualization", "architecture", "diagram"]
+    }
+  ]
+}
