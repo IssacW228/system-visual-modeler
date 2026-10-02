@@ -1,0 +1,13 @@
+{
+  "name": "system-visual-modeler",
+  "displayName": "System Visual Modeler",
+  "version": "1.1.0",
+  "description": "Turn folders, documents, codebases, workflows, architectures, algorithms, and math pipelines into evidence-grounded 2D, 2.5D, or 3D interactive models with Lite/Normal/Deep weights and incremental project memory.",
+  "author": {
+    "name": "IssacW228",
+    "url": "https://github.com/IssacW228"
+  },
+  "homepage": "https://github.com/IssacW228/system-visual-modeler",
+  "repository": "https://github.com/IssacW228/system-visual-modeler",
+  "keywords": ["visualization", "architecture", "codebase", "diagram", "system-modeling", "skill"]
+}

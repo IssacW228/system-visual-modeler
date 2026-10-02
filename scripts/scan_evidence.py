@@ -9,11 +9,35 @@ import json
 import math
 import os
 import re
+import stat as stat_mode
+import subprocess
 from collections import Counter
 from pathlib import Path
 
-IGNORED = {".git", ".next", ".visual-model", ".venv", "node_modules", "dist", "build", "coverage", "vendor", "__pycache__"}
-TEXT_EXTENSIONS = {".c", ".cc", ".cpp", ".css", ".go", ".h", ".html", ".java", ".js", ".jsx", ".json", ".md", ".mjs", ".py", ".rb", ".rs", ".sh", ".sql", ".toml", ".ts", ".tsx", ".txt", ".xml", ".yaml", ".yml"}
+# Exclusions apply to every mode. Lite stays light through its sampling budget,
+# never by hiding files from the inventory that normal and deep would also lose.
+IGNORED = {
+    ".git", ".hg", ".svn", ".visual-model", ".venv", "venv", ".tox", ".nox", ".eggs",
+    ".mypy_cache", ".pytest_cache", ".ruff_cache", ".cache", ".gradle", ".idea", ".next",
+    ".nuxt", ".parcel-cache", ".svelte-kit", ".terraform", ".turbo", ".yarn",
+    "__pycache__", "bower_components", "build", "coverage", "dist", "node_modules",
+    "out", "target", "vendor",
+}
+IGNORED_FILES = {".ds_store", "thumbs.db"}
+SENSITIVE = re.compile(r"(^\.env($|\.)|^\.netrc$|^\.npmrc$|^\.pypirc$|^id_(rsa|dsa|ecdsa|ed25519)|\.(pem|key|p12|pfx|keystore)$)", re.I)
+TEXT_EXTENSIONS = {
+    ".adoc", ".bash", ".bat", ".c", ".cc", ".cfg", ".cjs", ".clj", ".cmake", ".cpp", ".cs", ".css",
+    ".cts", ".cxx", ".dart", ".erl", ".ex", ".exs", ".fish", ".go", ".gradle", ".graphql", ".groovy",
+    ".h", ".hcl", ".hpp", ".hs", ".html", ".ini", ".ipynb", ".java", ".jl", ".js", ".json", ".jsx",
+    ".kt", ".kts", ".less", ".lua", ".m", ".md", ".mjs", ".ml", ".mm", ".mts", ".nim", ".php",
+    ".pl", ".proto", ".ps1", ".py", ".r", ".rb", ".rs", ".rst", ".sass", ".scala", ".scss", ".sh",
+    ".sol", ".sql", ".svelte", ".swift", ".tf", ".toml", ".ts", ".tsx", ".txt", ".vue", ".xml",
+    ".yaml", ".yml", ".zig", ".zsh",
+}
+DOCUMENT_EXTENSIONS = {".adoc", ".md", ".rst", ".txt"}
+CONFIG_EXTENSIONS = {".cfg", ".hcl", ".ini", ".json", ".tf", ".toml", ".xml", ".yaml", ".yml"}
+CONFIG_NAMES = {"dockerfile", "makefile", "gemfile", "rakefile", "procfile", "jenkinsfile", "justfile", "brewfile"}
+ENTRY_STEMS = {"main", "index", "page", "app", "server", "cli", "program", "manage", "__main__"}
 RICH_EXTENSIONS = {".csv", ".doc", ".docx", ".jpeg", ".jpg", ".mp3", ".mp4", ".pdf", ".png", ".ppt", ".pptx", ".tsv", ".wav", ".webp", ".xls", ".xlsx"}
 AUTHORITY_NAMES = {
     "readme.md": 120, "readme.txt": 115, "architecture.md": 112, "overview.md": 108,
@@ -36,22 +60,48 @@ def digest(data: bytes) -> str:
 
 def classify(path: Path) -> str:
     ext = path.suffix.lower()
-    if ext in {".md", ".txt"}: return "document"
-    if ext in {".json", ".toml", ".yaml", ".yml", ".xml"} or path.name.lower() == "dockerfile": return "config"
+    if ext in DOCUMENT_EXTENSIONS: return "document"
+    if ext in CONFIG_EXTENSIONS or path.name.lower() in CONFIG_NAMES: return "config"
     if ext in TEXT_EXTENSIONS: return "source"
     if ext in RICH_EXTENSIONS: return "rich-document"
     return "unknown"
 
 
-def iter_files(target: Path):
-    if target.is_file():
-        yield target
-        return
+def excluded(rel: Path) -> bool:
+    return any(part in IGNORED for part in rel.parts[:-1]) or rel.name.lower() in IGNORED_FILES or bool(SENSITIVE.search(rel.name)) or rel.name.endswith(".egg-info")
+
+
+def git_files(target: Path) -> list[Path] | None:
+    """Tracked plus untracked-but-not-ignored files, so .gitignore is honored."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(target), "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+            capture_output=True, check=True, timeout=60,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return sorted({Path(name) for name in result.stdout.decode("utf-8", errors="surrogateescape").split("\0") if name})
+
+
+def walk_files(target: Path) -> list[Path]:
+    found = []
     for root, dirs, names in os.walk(target):
-        dirs[:] = sorted(name for name in dirs if name not in IGNORED and not name.startswith("."))
-        for name in sorted(names):
-            if not name.startswith("."):
-                yield Path(root) / name
+        base = Path(root).relative_to(target)
+        dirs[:] = sorted(name for name in dirs if name not in IGNORED and not name.endswith(".egg-info"))
+        found.extend(base / name for name in sorted(names))
+    return found
+
+
+def iter_files(target: Path):
+    """Yield paths relative to target; deleted-but-tracked git entries are skipped."""
+    if target.is_file():
+        yield Path(target.name)
+        return
+    listed = git_files(target) or None  # empty: not a repo, or target itself is git-ignored
+    for rel in listed if listed is not None else walk_files(target):
+        if excluded(rel): continue
+        if listed is not None and not os.path.lexists(target / rel): continue
+        yield rel
 
 
 def adaptive_take(values: list[str], source_size: int) -> list[str]:
@@ -75,11 +125,19 @@ def extract_keywords(text: str, source_size: int) -> list[str]:
     return ranked_english + ranked_chinese
 
 
+SYMBOL_PATTERN = re.compile(
+    r"(?m)^[ \t]*(?:@\w+[ \t]+)*"
+    r"(?:(?:export|default|public|private|protected|internal|open|final|abstract|static|sealed|data|async|pub(?:\([^)]*\))?)[ \t]+)*"
+    r"(?:def|class|function|interface|type|enum|const|func|fn|fun|struct|protocol|trait|impl|object|record|module)"
+    r"[ \t]+([A-Za-z_$][\w$]*)"
+)
+
+
 def extract_text_facts(text: str) -> dict:
     size = len(text.splitlines())
     return {
         "headings": adaptive_take(re.findall(r"(?m)^#{1,6}\s+(.{1,160})$", text), size),
-        "symbols": adaptive_take(re.findall(r"(?m)^(?:export\s+)?(?:async\s+)?(?:def|class|function|interface|type|enum|const)\s+([A-Za-z_$][\w$]*)", text), size),
+        "symbols": adaptive_take(re.findall(SYMBOL_PATTERN, text), size),
         "imports": adaptive_take(re.findall(r"(?m)^(?:import\s+.+?from\s+|from\s+|require\s*\()['\"]?([^'\"\s;)]+)", text), size),
         "links": adaptive_take(re.findall(r"\[[^\]]+\]\(([^)]+)\)", text), size),
         "keywords": extract_keywords(text, size),
@@ -104,13 +162,18 @@ def path_terms(text: str) -> set[str]:
     return values
 
 
+def is_hidden(path: str) -> bool:
+    return path.startswith(".") or "/." in path
+
+
 def authority(record: dict, question_terms: set[str]) -> float:
     path = record["path"]
     name = Path(path).name.lower()
     score = AUTHORITY_NAMES.get(name, 0) + 24 / (record["depth"] + 1)
     lowered = path.lower()
     if any(word in lowered for word in ("architecture", "overview", "design", "docs", "guide", "requirements", "spec", "rfc")): score += 28
-    if Path(path).stem.lower() in {"main", "index", "page", "app", "server", "cli"}: score += 24
+    if Path(path).stem.lower() in ENTRY_STEMS: score += 24
+    if is_hidden(path) and not question_terms & path_terms(path): score -= 40
     if record["kind"] == "document": score += 18
     if question_terms & path_terms(path): score += 72
     return score
@@ -133,7 +196,7 @@ def choose_samples(records: list[dict], mode: str, question: str) -> list[dict]:
         if record not in selected: selected.append(record)
     for record in ranked:
         if len(selected) >= budget: break
-        if record not in selected and record["area"] not in seen_areas:
+        if record not in selected and record["area"] not in seen_areas and (not is_hidden(record["path"]) or question_terms & path_terms(record["path"])):
             selected.append(record); seen_areas.add(record["area"])
     for record in ranked:
         if len(selected) >= budget: break
@@ -163,10 +226,18 @@ def main() -> int:
     target = args.target.resolve()
     if not target.exists(): parser.error(f"target does not exist: {target}")
 
-    records = []
-    for path in iter_files(target):
-        rel = path.name if target.is_file() else str(path.relative_to(target))
-        stat = path.stat(); parts = Path(rel).parts
+    records, unresolved = [], []
+    for rel_path in iter_files(target):
+        path = target if target.is_file() else target / rel_path
+        rel = rel_path.as_posix()
+        try:
+            stat = path.stat()
+        except OSError as error:
+            reason = "broken-symlink" if path.is_symlink() else f"unreadable: {error.strerror or error}"
+            unresolved.append({"path":rel, "reason":reason}); continue
+        if not stat_mode.S_ISREG(stat.st_mode):
+            unresolved.append({"path":rel, "reason":"not-a-regular-file"}); continue
+        parts = rel_path.parts
         records.append({"path":rel, "kind":classify(path), "bytes":stat.st_size, "mtime_ns":stat.st_mtime_ns, "depth":len(parts) - 1, "area":parts[0] if len(parts) > 1 else "."})
 
     detailed = []
@@ -174,7 +245,10 @@ def main() -> int:
         path = target if target.is_file() else target / record["path"]
         item = dict(record)
         if record["kind"] in {"source", "document", "config"}:
-            raw = representative_bytes(path, record["bytes"])
+            try:
+                raw = representative_bytes(path, record["bytes"])
+            except OSError as error:
+                unresolved.append({"path":record["path"], "reason":f"unreadable: {error.strerror or error}"}); continue
             item["sha256"] = digest(raw + f":{record['bytes']}:{record['mtime_ns']}".encode())
             item["fingerprint_kind"] = "representative-content+metadata"
             item.update(extract_text_facts(raw.decode("utf-8", errors="replace")))
@@ -185,13 +259,14 @@ def main() -> int:
 
     inventory_fingerprint = digest("\n".join(f"{r['path']}:{r['bytes']}:{r['mtime_ns']}" for r in records).encode())
     primary_documents = [item["path"] for item in detailed if item["kind"] in {"document", "config"}]
-    entrypoints = [item["path"] for item in detailed if Path(item["path"]).stem.lower() in {"main", "index", "page", "app", "server", "cli"}]
+    entrypoints = [item["path"] for item in detailed if Path(item["path"]).stem.lower() in ENTRY_STEMS]
     result = {
         "version":"2.0", "target":str(target), "mode":args.mode, "question":args.question or None,
         "fingerprint":inventory_fingerprint,
         "coverage":{"structure_scanned":len(records), "content_sampled":len(detailed), "strategy":"complete metadata inventory → authority + structural diversity + question relevance"},
         "inventory":{"bytes":sum(record["bytes"] for record in records), "kinds":dict(Counter(record["kind"] for record in records)), "extensions":dict(Counter(Path(record["path"]).suffix.lower() or "[none]" for record in records))},
         "areas":compress_areas(records), "orientation":{"primary_documents":primary_documents, "likely_entrypoints":entrypoints}, "files":detailed,
+        "unresolved":unresolved,
     }
     rendered = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
     if args.output:

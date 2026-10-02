@@ -8,6 +8,8 @@ Use budgets as stopping rules for evidence collection, not as guarantees about p
 | normal | complete inventory plus relationship candidates | evidence selected by manifest needs | inspectable components and one representative trace | overview + hardest focus | required |
 | deep | complete inventory plus domain-specific extraction | evidence selected by unresolved semantics | fidelity-driven; no preset size | full audit | required |
 
+All modes share one inventory and one exclusion policy: `.gitignore`, dependency/build/cache directories, and secret-like files (`.env*`, private keys) are excluded everywhere; hidden project configuration such as `.github/` is inventoried everywhere. Lite stays light only through its smaller content-sampling budget and by down-ranking hidden paths unless the question names them. Never add a lite-only exclusion: it would make lite blind to structure that normal and deep can see, and anything lite leaves unread must still be visible as "found, not read".
+
 Do not use a fixed file or node count as a stopping rule. Adapt detail to project scale, structural diversity, document authority, entry-point proximity, and direct relevance to the user's question. Separate “structure scanned” from “content sampled” so broad coverage never implies that every file was semantically read.
 
 ## Progressive delivery
