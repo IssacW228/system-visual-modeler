@@ -104,7 +104,7 @@ python3 scripts/scan_evidence.py /path/to/project \
   --output .visual-model/evidence-index.json
 ```
 
-扫描器会遍历完整元数据结构，排除生成目录、依赖、缓存和二进制内容，再按项目级文档、入口文件、结构差异和问题相关性选择内容样本。内容取样数量随规模对数增长，而不是到达固定数量就停止。
+扫描器会遍历完整元数据结构（遵守 `.gitignore`，排除依赖、构建产物、缓存以及 `.env`、私钥等敏感文件；`.github/` 等隐藏配置会进入清单），三种模式共用同一份清单，只在内容取样数量上不同；失效的软链接或无法读取的文件会记录在 `unresolved` 中，再按项目级文档、入口文件、结构差异和问题相关性选择内容样本。内容取样数量随规模对数增长，而不是到达固定数量就停止。
 
 ### 模型清单验证
 
@@ -239,7 +239,7 @@ python3 scripts/scan_evidence.py /path/to/project \
   --output .visual-model/evidence-index.json
 ```
 
-The scanner walks the complete metadata inventory while excluding generated, vendored, cached, and binary content. It ranks project-level documentation and likely entry points instead of returning the first files encountered or stopping at a fixed count.
+The scanner walks the complete metadata inventory, honors `.gitignore`, and excludes dependency, build, cache, and secret-like files (`.env*`, private keys), while hidden project configuration such as `.github/` stays in the inventory. All modes share that inventory and differ only in how much content they sample; broken symlinks and unreadable files are reported under `unresolved`. It ranks project-level documentation and likely entry points instead of returning the first files encountered or stopping at a fixed count.
 
 ### Validate a manifest
 
@@ -333,7 +333,7 @@ python3 scripts/validate_model.py references/example-manifest.json
 claude plugin validate .
 ```
 
-The packaging tests keep `SKILL.md`, the Claude plugin manifests, and every bundled path referenced by the skill consistent. The project-memory tests cover no-op updates, dependency-aware changes, removal, compact retrieval, and unrelated-query rejection.
+The packaging tests keep `SKILL.md`, the Claude plugin manifests, and every bundled path referenced by the skill consistent. The scanner tests cover the shared inventory across modes, lite down-ranking of hidden configuration, `.gitignore` and secret exclusion, broken symlinks, and non-Python language symbols. The project-memory tests cover no-op updates, dependency-aware changes, removal, compact retrieval, and unrelated-query rejection.
 
 ## Origin
 
